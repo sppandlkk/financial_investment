@@ -45,9 +45,8 @@ SubsetDataByCandance <- function(dataIn, start_date, end_date, candance) {
 }
 
 
-FixedAmountPeriodically <- function(dataUse, stock, start_date, end_date, candance, fixed_amount) {
+FixedAmountPeriodically <- function(subsetData, fixed_amount) {
   
-  subsetData <- SubsetDataByCandance(dataUse[[stock]], start_date, end_date, candance)
   
   subsetData$purchase_price <- subsetData$close
   subsetData$purchase_quantity = fixed_amount/subsetData$close
@@ -56,18 +55,14 @@ FixedAmountPeriodically <- function(dataUse, stock, start_date, end_date, candan
   subsetData$sell_value = subsetData$purchase_quantity * subsetData$sell_price
   subsetData$profit = subsetData$sell_value - subsetData$purchase_value
   
-  number_of_year <- time_length(difftime(min(max(dataUse[[stock]]$date), as.Date(end_date)), 
-                                         max(min(dataUse[[stock]]$date), as.Date(start_date))), "years")
+  number_of_year <- length(unique(subsetData$year))
   
   
   roi <-  sum(subsetData$sell_value)/ sum(subsetData$purchase_value)
   arr <-  ((sum(subsetData$sell_value))/sum(subsetData$purchase_value))^(1/number_of_year) - 1
   
   list(data = subsetData,
-       data.table(stock = stock,
-                  start_date = start_date, 
-                  end_date = end_date, 
-                  number_of_year = number_of_year, 
+       data.table(number_of_year = number_of_year, 
                   investment = sum(subsetData$purchase_value),
                   return = sum(subsetData$sell_value),
                   roi = roi, 
@@ -75,9 +70,7 @@ FixedAmountPeriodically <- function(dataUse, stock, start_date, end_date, candan
   
 }
 
-FixedValuePeriodically <- function(dataUse, stock, start_date, end_date, candance, fixed_value) {
-  
-  subsetData <- SubsetDataByCandance(dataUse[[stock]], start_date, end_date, candance)
+FixedValuePeriodically <- function(subsetData, fixed_value) {
   
   subsetData$purchase_price <- subsetData$close
   
@@ -104,8 +97,7 @@ FixedValuePeriodically <- function(dataUse, stock, start_date, end_date, candanc
   }
   
   
-  number_of_year <- time_length(difftime(min(max(dataUse[[stock]]$date), as.Date(end_date)), 
-                                         max(min(dataUse[[stock]]$date), as.Date(start_date))), "years")
+  number_of_year <- length(unique(subsetData$year))
   
   total_return <- sum(subsetData$purchase_quantity) * subsetData[nrow(subsetData), close, ]
   
@@ -113,10 +105,7 @@ FixedValuePeriodically <- function(dataUse, stock, start_date, end_date, candanc
   arr <-  ((total_return)/sum(subsetData$purchase_value))^(1/number_of_year) - 1
   
   list(data = subsetData,
-       data.table(stock = stock,
-                  start_date = start_date, 
-                  end_date = end_date, 
-                  number_of_year = number_of_year, 
+       data.table(number_of_year = number_of_year, 
                   investment = sum(subsetData$purchase_value),
                   return = total_return,
                   roi = roi, 
