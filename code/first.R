@@ -13,13 +13,13 @@ ans <- do.call(rbind,
     
     a1 <- FixedAmountPeriodically(subsetData = subsetData,
                                    fixed_amount = 1000)
-    a1$result$sd_purchase_value <- sd(a1$data$purchase_value)
+    # a1$result$sd_purchase_value <- sd(a1$data$purchase_value)
     a1$result$method <- "fixed_amount"
     
   
     a2 <- FixedValuePeriodically(subsetData = subsetData,
                             fixed_value = 1000)
-    a2$result$sd_purchase_value <- sd(a2$data$purchase_value)
+    # a2$result$sd_purchase_value <- sd(a2$data$purchase_value)
     a2$result$method <- "fixed_value"
     
     data.table(stock = s, rbind(a1$result, a2$result))
@@ -28,3 +28,8 @@ ans <- do.call(rbind,
 )
 ans
 
+VOO <- SubsetDataByCandance(dataUse[["VOO"]], "2011-01-01", "2019-12-31", "month")
+rr <- FixedValuePeriodically(subsetData = VOO,
+                       fixed_value = 1000)$data
+hist(rr$purchase_value, breaks = 100, main = "")
+summary(rr$purchase_value)
