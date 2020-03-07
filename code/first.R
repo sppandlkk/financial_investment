@@ -31,5 +31,5 @@ ans
 VOO <- SubsetDataByCandance(dataUse[["VOO"]], "2011-01-01", "2019-12-31", "month")
 rr <- FixedValuePeriodically(subsetData = VOO,
                        fixed_value = 1000)$data
-hist(rr$purchase_value, breaks = 100, main = "")
+hist(rr$purchase_value, breaks = 50, main = "")
 summary(rr$purchase_value)
