@@ -62,12 +62,12 @@ FixedAmountPeriodically <- function(subsetData, fixed_amount) {
   arr <-  ((sum(subsetData$sell_value))/sum(subsetData$purchase_value))^(1/number_of_year) - 1
   
   list(data = subsetData,
-       data.table(number_of_year = number_of_year, 
-                  investment = sum(subsetData$purchase_value),
-                  return = sum(subsetData$sell_value),
-                  roi = roi, 
-                  arr = arr))
-  
+       result = data.table(number_of_year = number_of_year, 
+                           investment = sum(subsetData$purchase_value),
+                           return = sum(subsetData$sell_value),
+                           roi = roi, 
+                           arr = arr))
+    
 }
 
 FixedValuePeriodically <- function(subsetData, fixed_value) {
@@ -105,12 +105,12 @@ FixedValuePeriodically <- function(subsetData, fixed_value) {
   arr <-  ((total_return)/sum(subsetData$purchase_value))^(1/number_of_year) - 1
   
   list(data = subsetData,
-       data.table(number_of_year = number_of_year, 
-                  investment = sum(subsetData$purchase_value),
-                  return = total_return,
-                  roi = roi, 
-                  arr = arr))
-  
+       result = data.table(number_of_year = number_of_year, 
+                           investment = sum(subsetData$purchase_value),
+                           return = total_return,
+                           roi = roi, 
+                           arr = arr))
+           
 }
 
 
