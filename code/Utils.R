@@ -62,7 +62,8 @@ FixedAmountPeriodically <- function(subsetData, fixed_amount) {
   arr <-  ((sum(subsetData$sell_value))/sum(subsetData$purchase_value))^(1/number_of_year) - 1
   
   list(data = subsetData,
-       result = data.table(number_of_year = number_of_year, 
+       result = data.table(method = "fixed_amount",
+                           number_of_year = number_of_year, 
                            investment = sum(subsetData$purchase_value),
                            return = sum(subsetData$sell_value),
                            roi = roi, 
@@ -70,30 +71,29 @@ FixedAmountPeriodically <- function(subsetData, fixed_amount) {
     
 }
 
-FixedValuePeriodically <- function(subsetData, fixed_value) {
+FixedValuePeriodically <- function(subsetData, fixed_value, max_capacity = 9999) {
   
   subsetData$purchase_price <- subsetData$close
-  
   subsetData$ideal_value <- (1:nrow(subsetData)) * fixed_value
   
-  subsetData[, purchase_value:= 0] 
-  subsetData[, purchase_quantity:= 0]
-  subsetData[, cum_purchase_quantity:= 0]
+  subsetData[, purchase_value:= 0, ] 
+  subsetData[, purchase_quantity:= 0, ]
+  subsetData[, cum_purchase_quantity:= 0, ]
 
   subsetData[1, purchase_value:= fixed_value, ] 
   subsetData[1, purchase_quantity:= fixed_value/purchase_price, ] 
-
+  subsetData[1, cum_purchase_quantity:= purchase_quantity, ]
+  
   for (i in 2:nrow(subsetData)) {
     sell_price <- subsetData[i, close, ]
-    cum_quantity <- sum(subsetData[1:(i-1), purchase_quantity,])
-    cum_value <- sell_price * cum_quantity
+    previous_cum_quantity <- subsetData[i-1, cum_purchase_quantity,]
+    cum_value <- sell_price * previous_cum_quantity
     
-    subsetData[i-1, cum_purchase_quantity := cum_quantity]
-
+    subsetData[i, purchase_value := min((subsetData[i, ideal_value, ] - cum_value), fixed_value * max_capacity), ]
+    current_purchase_quantity <- (subsetData[i, purchase_value, ]/ subsetData[i, purchase_price, ])
+    subsetData[i, purchase_quantity := current_purchase_quantity, ]
     
-    subsetData[i, purchase_value := (subsetData[i, ideal_value, ] - cum_value), ]
-    subsetData[i, purchase_quantity := (subsetData[i, purchase_value, ]/ subsetData[i, purchase_price, ]), ]
-    
+    subsetData[i, cum_purchase_quantity := previous_cum_quantity + purchase_quantity, ]
   }
   
   
@@ -105,13 +105,42 @@ FixedValuePeriodically <- function(subsetData, fixed_value) {
   arr <-  ((total_return)/sum(subsetData$purchase_value))^(1/number_of_year) - 1
   
   list(data = subsetData,
-       result = data.table(number_of_year = number_of_year, 
+       result = data.table(method = "fixed_value",
+                           number_of_year = number_of_year, 
                            investment = sum(subsetData$purchase_value),
                            return = total_return,
                            roi = roi, 
-                           arr = arr))
+                           arr = arr,
+                           max_capacity = max_capacity))
            
 }
 
 
-
+CompareFixedAmountWithFixedValue <- function(stocks,
+                                             start_date,
+                                             end_date,
+                                             candance,
+                                             max_capacity_list) {
+  
+  do.call(rbind,
+         lapply(stocks, function(s) {
+           
+           subsetData <- SubsetDataByCandance(dataUse[[s]], start_date, end_date, candance)
+           
+           a1 <- FixedAmountPeriodically(subsetData = subsetData,
+                                         fixed_amount = 1000)
+           a1$result$max_capacity = ""
+           
+           fixed_value_result <- do.call(rbind, lapply(max_capacity_list, function(m) {
+             FixedValuePeriodically(subsetData = subsetData,
+                                    fixed_value = 1000,
+                                    max_capacity = m)$result
+           }))
+           
+           
+           data.table(stock = s, rbind(a1$result, fixed_value_result))
+           
+         })
+  )
+  
+}
