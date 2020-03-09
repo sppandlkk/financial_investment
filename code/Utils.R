@@ -71,10 +71,21 @@ FixedAmountPeriodically <- function(subsetData, fixed_amount) {
     
 }
 
-FixedValuePeriodically <- function(subsetData, fixed_value, max_capacity = 9999) {
+FixedValuePeriodically <- function(subsetData, 
+                                   fixed_value, 
+                                   annual_growth_rate = 0,
+                                   max_capacity = 9999) {
   
   subsetData$purchase_price <- subsetData$close
-  subsetData$ideal_value <- (1:nrow(subsetData)) * fixed_value
+  
+  ### count # of year
+  number_of_year <- length(unique(subsetData$year))
+  growth_adjusted_table <- data.table(year = sort(unique(subsetData$year)),
+                                      growth_adjusted_value = fixed_value * (1 + annual_growth_rate)^(0: (number_of_year -1) ))
+  
+  subsetData <- merge(subsetData, growth_adjusted_table, by = "year")
+  subsetData$ideal_value <- cumsum(subsetData$growth_adjusted_value)
+
   
   subsetData[, purchase_value:= 0, ] 
   subsetData[, purchase_quantity:= 0, ]
@@ -89,7 +100,7 @@ FixedValuePeriodically <- function(subsetData, fixed_value, max_capacity = 9999)
     previous_cum_quantity <- subsetData[i-1, cum_purchase_quantity,]
     cum_value <- sell_price * previous_cum_quantity
     
-    subsetData[i, purchase_value := min((subsetData[i, ideal_value, ] - cum_value), fixed_value * max_capacity), ]
+    subsetData[i, purchase_value := min((subsetData[i, ideal_value, ] - cum_value), subsetData[i, growth_adjusted_value, ] * max_capacity), ]
     current_purchase_quantity <- (subsetData[i, purchase_value, ]/ subsetData[i, purchase_price, ])
     subsetData[i, purchase_quantity := current_purchase_quantity, ]
     
@@ -97,7 +108,7 @@ FixedValuePeriodically <- function(subsetData, fixed_value, max_capacity = 9999)
   }
   
   
-  number_of_year <- length(unique(subsetData$year))
+  
   
   total_return <- sum(subsetData$purchase_quantity) * subsetData[nrow(subsetData), close, ]
   

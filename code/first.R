@@ -17,12 +17,18 @@ result
 ###
 VOO <- SubsetDataByCandance(dataUse[["VOO"]], "2011-01-01", "2019-12-31", "month")
 rr <- FixedValuePeriodically(subsetData = VOO,
-                       fixed_value = 1000,
-                       max_capacity = 2)$data
+                             fixed_value = 1300,
+                             annual_growth_rate = 0.05,
+                             max_capacity = 1.2)$data
+### this setting can generally produce better results
 FixedValuePeriodically(subsetData = VOO,
-                             fixed_value = 1000,
-                             max_capacity = 2)$result
+                             fixed_value = 1350,
+                            annual_growth_rate = 0.05,
+                             max_capacity = 1.2)$result
 
 
-hist(rr$purchase_value, breaks = 50, main = "")
-summary(rr$purchase_value)
+
+FixedAmountPeriodically(subsetData = VOO,
+                       fixed_amount = 1000)$result
+                       
+
