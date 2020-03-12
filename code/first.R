@@ -1,8 +1,15 @@
 rm(list=ls())
 source("./code/Utils.R")
 library(lubridate)
-stocks <- c("VOO", "VTI", "VUG", "BND", "BLV") 
+stocks <- c("VOO", "VTI", "VUG", "BND", "BLV", "VIX") 
 dataUse <- GrabStockData(stocks)
+
+### VIX is not working.... try loading a local version
+VIX <- read.csv("./data/VIX.csv")
+VIX$date <- as.Date(VIX$date)
+VIX <- data.table(VIX)
+dataUse[["VIX"]] <- VIX
+
 
 
 ### comparing fixed amount and fixed value
